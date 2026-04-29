@@ -103,7 +103,7 @@ def recuperer_dpe_zone(zone_cfg: dict, date_depuis: str) -> list:
                 "size": 100,
                 "page": page,
                 "q": cp,
-                "sort": "-Date_réception_DPE",
+                "sort": "-Date_reception_DPE",
             }
             try:
                 r = requests.get(API_BASE, params=params, timeout=30)
