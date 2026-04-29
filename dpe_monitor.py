@@ -163,7 +163,7 @@ def generer_email_avec_dpe(resultats_par_zone: dict) -> tuple:
             adresse = dpe.get("adresse_ban", "Adresse inconnue")
             cp      = dpe.get("code_postal_ban", "")
             commune = dpe.get("nom_commune_ban", "")
-            lien    = f"https://observatoire-dpe-audit.ademe.fr/pub/dpe/{num_dpe}"
+            lien    = f"https://observatoire-dpe-audit.ademe.fr/afficher-dpe/{num_dpe}"
 
             lignes += f"""
         <tr>
