@@ -86,55 +86,51 @@ def sauvegarder_cache(cache: dict):
 
 def recuperer_dpe_zone(zone_cfg: dict, date_depuis: str) -> list:
     """
-    Récupère les DPE via filtre exact sur le code postal.
-    Filtre ensuite par rayon GPS et par date.
+    Récupère les DPE triés par date décroissante.
+    Filtre côté Python par code postal, date et rayon GPS.
     """
-    lat_c  = zone_cfg["lat"]
-    lng_c  = zone_cfg["lng"]
-    rayon  = zone_cfg["rayon_km"]
-    codes  = zone_cfg.get("codes_postaux", ["69003"])
+    codes  = set(zone_cfg.get("codes_postaux", ["69003"]))
 
     tous = []
+    page = 0
 
-    for cp in codes:
-        page = 0
-        while True:
-            params = {
-                "size": 100,
-                "page": page,
-                "q": cp,
-                "sort": "-Date_reception_DPE",
-            }
-            try:
-                r = requests.get(API_BASE, params=params, timeout=30)
-                r.raise_for_status()
-                data = r.json()
-            except requests.RequestException as e:
-                print(f"    ⚠️  Erreur API (cp {cp}) : {e}")
+    while True:
+        params = {
+            "size": 100,
+            "page": page,
+            "sort": "Date_reception_DPE",
+            "order": "desc",
+        }
+        try:
+            r = requests.get(API_BASE, params=params, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+        except requests.RequestException as e:
+            print(f"    ⚠️  Erreur API : {e}")
+            break
+
+        resultats = data.get("results", [])
+        if not resultats:
+            break
+
+        stop = False
+        for dpe in resultats:
+            # Filtre date
+            date_str = dpe.get("Date_réception_DPE") or dpe.get("Date_reception_DPE", "")
+            if date_str and date_str < date_depuis:
+                stop = True
                 break
 
-            resultats = data.get("results", [])
-            if not resultats:
-                break
+            # Filtre code postal
+            cp_dpe = dpe.get("Code_postal_(BAN)") or dpe.get("Code_postal__BAN_", "")
+            if cp_dpe not in codes:
+                continue
 
-            stop = False
-            for dpe in resultats:
-                date_str = dpe.get("Date_réception_DPE", "")
-                if date_str and date_str < date_depuis:
-                    stop = True
-                    break
+            tous.append(dpe)
 
-                lat_d = dpe.get("latitude")
-                lng_d = dpe.get("longitude")
-                if lat_d and lng_d:
-                    if distance_km(lat_c, lng_c, float(lat_d), float(lng_d)) > rayon:
-                        continue
-
-                tous.append(dpe)
-
-            if stop or len(resultats) < 100:
-                break
-            page += 1
+        if stop or len(resultats) < 100:
+            break
+        page += 1
 
     return tous
 
