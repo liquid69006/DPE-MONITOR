@@ -1,0 +1,41 @@
+name: 🏠 DPE Prospector
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-6"
+  workflow_dispatch:
+
+jobs:
+  surveiller-dpe:
+    name: Surveillance DPE multi-zones
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 🐍 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Dépendances
+        run: pip install requests
+
+      - name: 💾 Restauration cache DPE
+        uses: actions/cache@v4
+        with:
+          path: dpe_cache.json
+          key: dpe-cache-${{ github.run_number }}
+          restore-keys: |
+            dpe-cache-
+
+      - name: 🔍 Surveillance DPE
+        env:
+          EMAIL_EXPEDITEUR:   ${{ secrets.EMAIL_EXPEDITEUR }}
+          EMAIL_DESTINATAIRE: ${{ secrets.EMAIL_DESTINATAIRE }}
+          EMAIL_MOT_DE_PASSE: ${{ secrets.EMAIL_MOT_DE_PASSE }}
+          ZONES_JSON:         ${{ secrets.ZONES_JSON }}
+        run: python dpe_monitor.py
