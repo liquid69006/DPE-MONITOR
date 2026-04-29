@@ -102,7 +102,6 @@ def recuperer_dpe_zone(zone_cfg: dict, date_depuis: str) -> list:
             params = {
                 "size": 100,
                 "page": page,
-                "select": ",".join(CHAMPS),
                 "q": cp,
                 "sort": "-Date_réception_DPE",
             }
