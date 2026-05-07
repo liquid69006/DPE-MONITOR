@@ -2,8 +2,11 @@ name: 🏠 DPE Prospector
 
 on:
   schedule:
-    - cron: "0 3 * * 1-6"   # Lun→Sam à 5h UTC (8h Paris été / 6h Paris hiver)
+    - cron: "0 3 * * 1-6"   # Lun→Sam à 3h UTC (5h Paris été / 4h Paris hiver)
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   surveiller-dpe:
@@ -41,3 +44,11 @@ jobs:
           EMAIL_MOT_DE_PASSE: ${{ secrets.EMAIL_MOT_DE_PASSE }}
           ZONES_JSON:         ${{ secrets.ZONES_JSON }}
         run: python dpe_monitor.py
+
+      - name: 📊 Commit data.json
+        run: |
+          git config user.name "DPE Prospector Bot"
+          git config user.email "actions@github.com"
+          git add data.json
+          git diff --staged --quiet || git commit -m "📊 Mise à jour data.json [$(date '+%d/%m/%Y')]"
+          git push
